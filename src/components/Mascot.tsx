@@ -1,39 +1,60 @@
 'use client'
 
+/**
+ * Mascote real — usa exclusivamente os PNGs processados a partir dos arquivos
+ * originais (scripts/process-mascot-assets.py). Nada foi redesenhado.
+ *
+ * Fase atual (a pedido): estados FELIZ e BRAVO com animação completa.
+ * Os demais estados já têm assets extraídos em /public/mascot/states e são
+ * mapeados para o mais próximo até serem ativados.
+ */
 import { useEffect, useState } from 'react'
 import type { MascotState } from '@/lib/types'
 
-const labels: Record<MascotState, string> = {
-  feliz:'Feliz', apaixonado:'Apaixonado', cansado:'Cansado com café', conectando:'Conectando',
-  programando:'Programando', ouvindo_musica:'Ouvindo música', bravo:'Bravo com um bug', erro404:'Erro 404',
+const ACTIVE: Record<MascotState, { img: string; anim: string; fx: { img: string; cls: string }[] }> = {
+  feliz:        { img: '/mascot/states/happy.png', anim: 'm-bounce', fx: [{ img: '/mascot/fx/sparkles.png', cls: 'fx-sparkle' }] },
+  apaixonado:   { img: '/mascot/states/happy.png', anim: 'm-breathe', fx: [{ img: '/mascot/fx/heart-big.png', cls: 'fx-heart' }, { img: '/mascot/fx/heart-small.png', cls: 'fx-heart fx-heart--2' }] },
+  cansado:      { img: '/mascot/states/happy.png', anim: 'm-breathe', fx: [] },
+  conectando:   { img: '/mascot/states/happy.png', anim: 'm-tilt', fx: [] },
+  programando:  { img: '/mascot/states/happy.png', anim: 'm-type', fx: [] },
+  ouvindo_musica:{ img: '/mascot/states/happy.png', anim: 'm-sway', fx: [{ img: '/mascot/fx/music-notes.png', cls: 'fx-note' }] },
+  bravo:        { img: '/mascot/states/angry.png', anim: 'm-shake', fx: [{ img: '/mascot/fx/anger-mark.png', cls: 'fx-anger' }, { img: '/mascot/fx/steam-cloud.png', cls: 'fx-steam' }] },
+  erro404:      { img: '/mascot/states/angry.png', anim: 'm-shake', fx: [{ img: '/mascot/fx/tears.png', cls: 'fx-tear' }] },
 }
 
-export function Mascot({ state='feliz', size='md', interactive=true }: { state?: MascotState; size?: 'sm'|'md'|'lg'; interactive?: boolean }) {
-  const [blink, setBlink] = useState(false)
+const LABEL: Record<MascotState, string> = {
+  feliz: 'Feliz', apaixonado: 'Apaixonado', cansado: 'Cansado com café', conectando: 'Conectando',
+  programando: 'Programando', ouvindo_musica: 'Ouvindo música', bravo: 'Bravo com um bug', erro404: 'Erro 404',
+}
+
+const SIZE = { sm: 74, md: 150, lg: 220 }
+
+export function Mascot({ state = 'feliz', size = 'md' }: { state?: MascotState; size?: 'sm' | 'md' | 'lg' }) {
+  const cfg = ACTIVE[state] ?? ACTIVE.feliz
+  const [visible, setVisible] = useState(cfg.img)
+  const [fading, setFading] = useState(false)
+
+  // Transição suave entre estados (crossfade), nunca troca abrupta.
   useEffect(() => {
-    const timer = window.setInterval(() => { setBlink(true); window.setTimeout(() => setBlink(false), 160) }, 2600 + Math.random() * 1600)
-    return () => window.clearInterval(timer)
-  }, [])
+    if (cfg.img === visible) return
+    setFading(true)
+    const t = window.setTimeout(() => { setVisible(cfg.img); setFading(false) }, 180)
+    return () => window.clearTimeout(t)
+  }, [cfg.img, visible])
+
+  const px = SIZE[size]
   return (
-    <figure className={`mascot mascot--${state} mascot--${size} ${interactive ? 'mascot--interactive' : ''}`} aria-label={`Mascote Devito: ${labels[state]}`}>
-      <span className="mascot__shadow" />
-      <span className="mascot__body"><span className="mascot__hoodie-code">&lt;/&gt;</span></span>
-      <span className="mascot__wing mascot__wing--left" />
-      <span className="mascot__wing mascot__wing--right" />
-      <span className="mascot__foot mascot__foot--left" />
-      <span className="mascot__foot mascot__foot--right" />
-      <span className="mascot__head"><span className="mascot__tuft mascot__tuft--one"/><span className="mascot__tuft mascot__tuft--two"/></span>
-      <span className={`mascot__eye mascot__eye--left ${blink ? 'is-blinking' : ''}`}><i className="mascot__pupil"/></span>
-      <span className={`mascot__eye mascot__eye--right ${blink ? 'is-blinking' : ''}`}><i className="mascot__pupil"/></span>
-      <span className="mascot__glasses"><i/><i/></span>
-      <span className="mascot__beak" />
-      {state === 'apaixonado' && <span className="mascot__effects mascot__hearts">♥ <i>♥</i></span>}
-      {state === 'cansado' && <span className="mascot__prop mascot__coffee">CODE<br/>+<br/>CAFÉ</span>}
-      {state === 'conectando' && <span className="mascot__prop mascot__usb">USB</span>}
-      {state === 'programando' && <span className="mascot__prop mascot__keyboard">⌨</span>}
-      {state === 'ouvindo_musica' && <><span className="mascot__headphones"/><span className="mascot__effects mascot__notes">♫ ♪</span></>}
-      {state === 'bravo' && <><span className="mascot__effects mascot__anger">╬</span><span className="mascot__prop mascot__laptop">BUG</span></>}
-      {state === 'erro404' && <><span className="mascot__tear mascot__tear--left"/><span className="mascot__tear mascot__tear--right"/><span className="mascot__prop mascot__monitor">ERROR<br/><b>404</b></span></>}
+    <figure
+      className={`mx mx--${size} ${cfg.anim} ${fading ? 'mx--fading' : ''}`}
+      style={{ width: px, height: px }}
+      aria-label={`Mascote Devito: ${LABEL[state]}`}
+      role="img"
+    >
+      <img src="/mascot/fx/shadow-large.png" alt="" aria-hidden className="mx__shadow" />
+      <img src={visible} alt="" aria-hidden className="mx__body" draggable={false} />
+      {cfg.fx.map((f, i) => (
+        <img key={f.cls + i} src={f.img} alt="" aria-hidden className={`mx__fx ${f.cls}`} draggable={false} />
+      ))}
     </figure>
   )
 }

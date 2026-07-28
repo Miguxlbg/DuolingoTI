@@ -1,0 +1,101 @@
+{
+  "states": {
+    "happy": {
+      "file": "/mascot/states/happy.png",
+      "w": 203,
+      "h": 197
+    },
+    "love": {
+      "file": "/mascot/states/love.png",
+      "w": 245,
+      "h": 223
+    },
+    "tired": {
+      "file": "/mascot/states/tired.png",
+      "w": 212,
+      "h": 224
+    },
+    "connecting": {
+      "file": "/mascot/states/connecting.png",
+      "w": 210,
+      "h": 194
+    },
+    "coding": {
+      "file": "/mascot/states/coding.png",
+      "w": 189,
+      "h": 208
+    },
+    "music": {
+      "file": "/mascot/states/music.png",
+      "w": 174,
+      "h": 207
+    },
+    "angry": {
+      "file": "/mascot/states/angry.png",
+      "w": 180,
+      "h": 208
+    },
+    "error404": {
+      "file": "/mascot/states/error404.png",
+      "w": 167,
+      "h": 189
+    }
+  },
+  "fx": {
+    "heart-big": {
+      "file": "/mascot/fx/heart-big.png",
+      "w": 29,
+      "h": 25
+    },
+    "sparkles": {
+      "file": "/mascot/fx/sparkles.png",
+      "w": 28,
+      "h": 15
+    },
+    "music-notes": {
+      "file": "/mascot/fx/music-notes.png",
+      "w": 22,
+      "h": 28
+    },
+    "steam-cloud": {
+      "file": "/mascot/fx/steam-cloud.png",
+      "w": 16,
+      "h": 21
+    },
+    "anger-mark": {
+      "file": "/mascot/fx/anger-mark.png",
+      "w": 21,
+      "h": 21
+    },
+    "heart-small": {
+      "file": "/mascot/fx/heart-small.png",
+      "w": 24,
+      "h": 20
+    },
+    "tears": {
+      "file": "/mascot/fx/tears.png",
+      "w": 12,
+      "h": 20
+    },
+    "cloud-puff": {
+      "file": "/mascot/fx/cloud-puff.png",
+      "w": 20,
+      "h": 18
+    },
+    "shadow-large": {
+      "file": "/mascot/fx/shadow-large.png",
+      "w": 37,
+      "h": 9
+    },
+    "shadow-medium": {
+      "file": "/mascot/fx/shadow-medium.png",
+      "w": 19,
+      "h": 11
+    },
+    "shadow-small": {
+      "file": "/mascot/fx/shadow-small.png",
+      "w": 13,
+      "h": 11
+    }
+  }
+}
