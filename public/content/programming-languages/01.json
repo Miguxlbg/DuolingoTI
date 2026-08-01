@@ -1,0 +1,213 @@
+{
+ "title": "Sintaxe básica comparada: Python vs JavaScript",
+ "context": "No desenvolvimento de software moderno, é extremamente comum transitar entre diferentes linguagens na mesma pilha de tecnologia. Por exemplo, uma arquitetura pode ter um backend em Python operando modelos de inteligência artificial ou processamento de dados, e um frontend web dinâmico em JavaScript ou TypeScript.\n\nDominar a sintaxe básica e as regras de execução dessas linguagens não é apenas memorizar palavras-chave. Trata-se de entender como cada engine interpreta dados, resolve escopos de variáveis e trata operações matemáticas e lógicas. Pequenas diferenças conceituais, como o tratamento de valores nulos ou a coerção implícita de tipos, são causas frequentes de bugs críticos em produção.\n\nNesta lição fundamental, você aprenderá a comparar diretamente a sintaxe e a semântica de execução entre Python e JavaScript, estabelecendo uma base sólida para transitar entre ecossistemas sem cometer deslizes conceituais.",
+ "theory": "A escolha da linguagem de programação afeta diretamente como o código é estruturado, interpretado e executado. Python e JavaScript são duas das linguagens dinâmicas mais populares do mundo, mas possuem filosofias de design profundamente distintas em relação à sintaxe, gerenciamento de escopo e sistema de tipos.\n\n### 1. Delimitação de Blocos e Sintaxe\nPython utiliza a *off-side rule*, o que significa que a estrutura do programa é definida estritamente pela indentação (espaço em branco). Não existem chaves `{}` ou ponto e vírgula `;` obrigatórios para encerrar instruções.\nEm contrapartida, JavaScript utiliza a sintaxe derivada da família C, empregando chaves `{}` para delimitar blocos de código e ponto e vírgula `;` (embora opcional devido ao mecanismo de *Automatic Semicolon Insertion* - ASI) para terminar declarações.\n\n### 2. Declarações de Variáveis e Escopo\nEm Python, variáveis são criadas no momento em que um valor é atribuído a elas (`x = 10`). O escopo em Python é determinado por funções, classes ou módulos (regra LEGB: Local, Enclosing, Global, Built-in). Python não possui escopo de bloco puro para instruções como `if` ou `for`.\nEm JavaScript, a declaração evoluiu historicamente. Antigamente utilizava-se apenas `var` (que possui escopo de função e sofre *hoisting*). A partir do ECMAScript 2015 (ES6), foram introduzidos `let` e `const`, que possuem escopo de bloco estrito, prevenindo vazamento de variáveis fora de estruturas condicionais ou laços de repetição.\n\n### 3. Sistema de Tipos e Coerção\nAmbas as linguagens são dinamicamente tipadas (o tipo da variável é verificado em tempo de execução). Porém, Python possui **tipagem forte**, enquanto JavaScript possui **coerção de tipos implícita** em diversas operações (frequentemente associada à tipagem fraca em expressões matemáticas/string).\n\nVeja a comparação prática nos exemplos de código abaixo:\n\n```python\n# Exemplo em Python (Executável)\ndef calcular_total(preco: float, taxa: float) -> float:\n    # Bloco definido por indentação (4 espaços)\n    if preco <= 0:\n        return 0.0\n    total = preco + (preco * taxa)\n    return total\n\nprint(\"Python Total:\", calcular_total(100.0, 0.1))\n\n# Tentativa de coerção em Python resulta em TypeError:\ntry:\n    resultado = 100 + \"10\"\nexcept TypeError as e:\n    print(\"Erro de tipo no Python:\", e)\n```\n\n```javascript\n// Exemplo em JavaScript (Executável)\nfunction calcularTotal(preco, taxa) {\n    // Bloco definido por chaves {}\n    if (preco <= 0) {\n        return 0.0;\n    }\n    const total = preco + (preco * taxa);\n    return total;\n}\n\nconsole.log(\"JS Total:\", calcularTotal(100.0, 0.1));\n\n// Coerção implícita em JavaScript:\nconst coercao = 100 + \"10\";\nconsole.log(\"Coerção JS (100 + '10'):\", coercao);\n```\n\nCompreender essas nuances de sintaxe e comportamento de tipos é fundamental para desenvolvedores full-stack realizarem integrações limpas e evitarem erros em tempo de execução ao alternar entre ecossistemas.",
+ "useCase": "Imagine que você trabalha em uma fintech e recebeu um chamado urgente de produção. Um serviço de checkout em Node.js calcula o valor final da compra somando o preço total do carrinho `150` ao frete recuperado de uma API legada em formato string `\"20\"`. Em JavaScript, `150 + \"20\"` gera `\"15020\"`, e o cliente é cobrado em R$ 15.020,00 em vez de R$ 170,00.\n\nPor outro lado, o microserviço de relatórios financeiros escrito em Python recebeu o mesmo valor e simplesmente quebrou o worker com uma exceção `TypeError: unsupported operand type(s) for +: 'int' and 'str'`. Como engenheiro responsável, você precisa diagnosticar como a ausência de validação de tipos afeta de maneiras opostas ambas as linguagens e aplicar a conversão explícita adequada no pipeline de dados.",
+ "diagram": {
+  "kind": "flow",
+  "title": "Fluxo de Coerção e Tipagem: Python vs JavaScript",
+  "nodes": [
+   {
+    "id": "1",
+    "label": "Operação: 100 + '10'"
+   },
+   {
+    "id": "2",
+    "label": "Avaliação no Python (Tipagem Forte)"
+   },
+   {
+    "id": "3",
+    "label": "Lança TypeError (Interrompe execução)"
+   },
+   {
+    "id": "4",
+    "label": "Avaliação no JavaScript (Tipagem Fraca/Coerção)"
+   },
+   {
+    "id": "5",
+    "label": "Converte 100 para string '100'"
+   },
+   {
+    "id": "6",
+    "label": "Resultado Concatenado: '10010'"
+   }
+  ],
+  "edges": [
+   {
+    "from": "1",
+    "to": "2",
+    "label": "Executado em Python"
+   },
+   {
+    "from": "2",
+    "to": "3"
+   },
+   {
+    "from": "1",
+    "to": "4",
+    "label": "Executado em JS"
+   },
+   {
+    "from": "4",
+    "to": "5"
+   },
+   {
+    "from": "5",
+    "to": "6"
+   }
+  ]
+ },
+ "vocabulary": [
+  {
+   "term": "Coerção de Tipos (Type Coercion)",
+   "definition": "Conversão automática ou implícita de um valor de um tipo de dado para outro feita pelo interpretador durante a execução de uma operação.",
+   "example": "Em JavaScript, '5' - 2 resulta em 3 porque a string '5' é convertida para o número 5."
+  },
+  {
+   "term": "Escopo de Bloco (Block Scope)",
+   "definition": "Região do código delimitada por chaves {} onde as variáveis declaradas (com let ou const) existem e só podem ser acessadas.",
+   "example": "Uma variável criada dentro de um 'if' com 'let' em JavaScript não pode ser lida fora das chaves desse 'if'."
+  },
+  {
+   "term": "Tipagem Forte (Strong Typing)",
+   "definition": "Característica de linguagens que não realizam conversões automáticas e implícitas entre tipos incompatíveis em operações.",
+   "example": "Python não permite somar o número 10 com a string '20' diretamente, exigindo int('20')."
+  },
+  {
+   "term": "Off-side Rule",
+   "definition": "Convenção de sintaxe onde os blocos de código e escopos são determinados pelo nível de indentação do texto em vez de pontuações como chaves.",
+   "example": "Em Python, a ausência da indentação correta gera uma exceção do tipo IndentationError."
+  }
+ ],
+ "exercises": [
+  {
+   "kind": "multiple_choice",
+   "prompt": "O que acontece ao executar a linha de código `print(10 + \"20\")` em um interpretador Python 3?",
+   "code": "print(10 + \"20\")",
+   "options": [
+    "Lança um erro de tipo (TypeError)",
+    "Imprime o valor 30 no console",
+    "Imprime a string '1020' no console",
+    "Imprime o valor None"
+   ],
+   "answer": "Lança um erro de tipo (TypeError)",
+   "explanation": "Python possui tipagem forte e recusa-se a somar um número inteiro com uma string de forma automática. O interpretador exige uma conversão explícita como `10 + int(\"20\")`."
+  },
+  {
+   "kind": "multiple_choice",
+   "prompt": "Qual é a saída exata do código JavaScript abaixo ao ser executado no Node.js ou navegador?",
+   "code": "console.log(10 + \"20\");",
+   "options": [
+    "1020",
+    "30",
+    "TypeError",
+    "NaN"
+   ],
+   "answer": "1020",
+   "explanation": "JavaScript possui coerção de tipos implícita. Quando o operador `+` encontra uma string, ele converte o operando numérico (10) em string e realiza a concatenação, gerando '1020'."
+  },
+  {
+   "kind": "true_false",
+   "prompt": "Em Python, a indentação do código serve apenas para organização visual do programador e não afeta o fluxo de execução nem os escopos do programa.",
+   "code": null,
+   "options": [
+    "Verdadeiro",
+    "Falso"
+   ],
+   "answer": "Falso",
+   "explanation": "Em Python, a indentação é sintaticamente obrigatória (regra off-side). Ela define o início e o fim de blocos de controle de fluxo, funções e classes. Indentação incorreta gera `IndentationError`."
+  },
+  {
+   "kind": "fill_blank",
+   "prompt": "Preencha a palavra-chave necessária em JavaScript para declarar uma constante de escopo de bloco imutável:",
+   "code": "___ LIMITE = 100;",
+   "options": null,
+   "answer": "const",
+   "explanation": "A instrução `const` declara uma referência constante com escopo de bloco em JavaScript, impedindo a reatribuição da variável."
+  },
+  {
+   "kind": "match_pairs",
+   "prompt": "Associe corretamente cada característica à sua respectiva linguagem de programação:",
+   "code": null,
+   "options": [
+    "Python::Blocos delimitados por indentação",
+    "JavaScript::Blocos delimitados por chaves {}",
+    "Python::Tipagem forte sem coerção int+str",
+    "JavaScript::Coerção implícita em operações heterogêneas"
+   ],
+   "answer": "Python::Blocos delimitados por indentação|JavaScript::Blocos delimitados por chaves {}|Python::Tipagem forte sem coerção int+str|JavaScript::Coerção implícita em operações heterogêneas",
+   "explanation": "Python é marcado pela indentação significativa e tipagem forte, enquanto JavaScript utiliza a sintaxe estilo C com chaves e coerção implícita de tipos."
+  },
+  {
+   "kind": "order_tokens",
+   "prompt": "Ordene os tokens para formar uma declaração de função válida em Python que retorne o dobro de um número x:",
+   "code": null,
+   "options": [
+    "def",
+    "dobro(x):",
+    "return",
+    "x",
+    "*",
+    "2"
+   ],
+   "answer": "def dobro(x): return x * 2",
+   "explanation": "Em Python, uma função simples pode ser declarada com a palavra `def`, seguida do nome com parâmetros, dois pontos `:` e a instrução `return`."
+  },
+  {
+   "kind": "true_false",
+   "prompt": "As variáveis declaradas com a instrução `let` em JavaScript possuem escopo de bloco, enquanto variáveis declaradas com `var` possuem escopo de função.",
+   "code": null,
+   "options": [
+    "Verdadeiro",
+    "Falso"
+   ],
+   "answer": "Verdadeiro",
+   "explanation": "Introduzido no ES6, `let` restringe o acesso da variável ao bloco `{}` onde foi criada, enquanto `var` vaza fora do bloco e tem seu escopo atrelado à função externa."
+  },
+  {
+   "kind": "multiple_choice",
+   "prompt": "Qual é a saída do comando `console.log(typeof null);` em JavaScript e qual é a razão para esse comportamento?",
+   "code": "console.log(typeof null);",
+   "options": [
+    "'object' devido a uma peculiaridade mantida por compatibilidade retroativa",
+    "'null' pois null é um tipo primitivo isolado",
+    "'undefined' porque null representa a ausência de tipo",
+    "'boolean' pois null é um valor falso por padrão"
+   ],
+   "answer": "'object' devido a uma peculiaridade mantida por compatibilidade retroativa",
+   "explanation": "Em JS, `typeof null` retorna `'object'` devido a um bug histórico na primeira versão da linguagem (onde o tipo era lido através de tags de memória). O comportamento foi mantido para não quebrar sistemas legados."
+  },
+  {
+   "kind": "order_tokens",
+   "prompt": "Ordene os tokens para construir uma instrução condicional 'if' em JavaScript que compara estritamente duas variáveis a e b:",
+   "code": null,
+   "options": [
+    "if",
+    "(a",
+    "===",
+    "b)",
+    "{",
+    "console.log('iguais');",
+    "}"
+   ],
+   "answer": "if (a === b) { console.log('iguais'); }",
+   "explanation": "JavaScript exige parênteses `()` ao redor da condição do `if`, utiliza `===` para comparação estrita de tipo e valor, e chaves `{}` para envolver o bloco de código."
+  },
+  {
+   "kind": "open_writing",
+   "prompt": "Explique com suas palavras a diferença prática de comportamento entre Python e JavaScript ao realizarem uma operação matemática com tipos mistos (como somar um inteiro e uma string contendo um número).",
+   "code": null,
+   "options": null,
+   "answer": "Python possui tipagem forte e lança uma exceção do tipo TypeError, interrompendo a execução até que o desenvolvedor faça a conversão explícita. JavaScript possui coerção implícita e converte automaticamente o número para string, realizando a concatenação dos valores em vez da soma matemática.",
+   "explanation": "Esta diferença é central na arquitetura das duas linguagens: Python prioriza a explicitação e segurança contra conversões acidentais, enquanto JS prioriza a continuidade da execução através de coerções automáticas."
+  }
+ ],
+ "trackId": "programming-languages",
+ "world": "academic",
+ "order": 1,
+ "slug": "programming-languages-1",
+ "xp": 20,
+ "source": {
+  "kind": "consolidated"
+ }
+}

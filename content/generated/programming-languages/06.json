@@ -1,0 +1,175 @@
+{
+ "title": "POO Parte 1: Classes e Objetos em Python, JavaScript, Java e C++",
+ "context": "A Programação Orientada a Objetos (POO) é o paradigma dominante no desenvolvimento de sistemas empresariais, frameworks modernos e arquiteturas de software escaláveis. Compreender a relação entre uma classe e suas instâncias é fundamental para construir softwares modulares, onde o estado e o comportamento são organizados de forma coesa.\n\nNo dia a dia de engenharia, devs frequentemente alternam entre linguagens com diferentes modelos de execução. Enquanto Java e C++ impõem checagem estática de tipos e gerenciamento rigoroso de memória, Python e JavaScript oferecem abordagens mais dinâmicas para a criação de objetos. No entanto, o conceito central permanece idêntico: a classe serve como abstração/molde e o objeto como entidade ativa alocada em memória.\n\nDominar este fundamento evita erros comuns de escopo, mutações indevidas de dados globais e vazamentos de memória, permitindo refatorar procedimentos legados e desestruturados em arquiteturas limpas e de fácil manutenção.",
+ "theory": "A Programação Orientada a Objetos (POO) baseia-se no conceito de agrupar dados e comportamentos relacionados em unidades coesas. Os dois pilares operacionais desse paradigma são as **Classes** e os **Objetos**.\n\n### 1. Classe vs. Objeto\n- **Classe**: É uma estrutura lógica que atua como um blueprint (planta baixa) ou molde. Ela especifica quais variáveis de estado (**atributos**) um objeto possuirá e quais funções (**métodos**) ele poderá executar. A classe define o tipo de dado, mas não aloca memória para os dados de uma instância específica durante a definição.\n- **Objeto (Instância)**: É a corporificação concreta de uma classe alocada na memória Heap durante a execução do programa (runtime). Cada objeto possui sua própria cópia dos atributos de instância, mantendo um estado independente de outros objetos criados a partir da mesma classe.\n\n### 2. Inicialização e Construtores\nQuando um objeto é instanciado, um método especial chamado **construtor** é invocado automaticamente para reservar memória e atribuir o estado inicial do objeto.\n- Em **Python**, o construtor é o método `__init__` e o primeiro parâmetro de qualquer método de instância deve ser explicitamente chamado de `self`.\n- Em **JavaScript (ES6+)**, a palavra-chave `constructor` é utilizada dentro do bloco `class`, e referenciamos atributos através da palavra reservada `this`.\n- Em **Java** e **C++**, o construtor é um método que possui exatamente o mesmo nome da classe, sem tipo de retorno explícito.\n\n### 3. Exemplos Práticos Multi-Linguagem\n\n#### Python (Executável)\n```python\nclass ContaBancaria:\n    def __init__(self, titular: str, saldo_inicial: float):\n        self.titular = titular\n        self.saldo = saldo_inicial\n\n    def depositar(self, valor: float) -> None:\n        if valor > 0:\n            self.saldo += valor\n\n    def obter_saldo(self) -> float:\n        return self.saldo\n\nconta = ContaBancaria(\"Alice\", 1000.0)\nconta.depositar(500.0)\nprint(f\"Titular: {conta.titular}, Saldo: {conta.obter_saldo()}\")\n# Saída: Titular: Alice, Saldo: 1500.0\n```\n\n#### JavaScript (Node.js / Executável)\n```javascript\nclass ContaBancaria {\n    constructor(titular, saldoInicial) {\n        this.titular = titular;\n        this.saldo = saldoInicial;\n    }\n\n    depositar(valor) {\n        if (valor > 0) {\n            this.saldo += valor;\n        }\n    }\n\n    obterSaldo() {\n        return this.saldo;\n    }\n}\n\nconst conta = new ContaBancaria(\"Bob\", 1000.0);\nconta.depositar(250.0);\nconsole.log(`Titular: ${conta.titular}, Saldo: ${conta.obterSaldo()}`);\n// Saída: Titular: Bob, Saldo: 1250\n```\n\n#### Java\n```java\npublic class ContaBancaria {\n    private String titular;\n    private double saldo;\n\n    public ContaBancaria(String titular, double saldoInicial) {\n        this.titular = titular;\n        this.saldo = saldoInicial;\n    }\n\n    public void depositar(double valor) {\n        if (valor > 0) {\n            this.saldo += valor;\n        }\n    }\n\n    public double getSaldo() {\n        return this.saldo;\n    }\n}\n```\n\n#### C++\n```cpp\n#include <iostream>\n#include <string>\n\nclass ContaBancaria {\nprivate:\n    std::string titular;\n    double saldo;\n\npublic:\n    ContaBancaria(std::string t, double s) : titular(t), saldo(s) {}\n\n    void depositar(double valor) {\n        if (valor > 0) {\n            saldo += valor;\n        }\n    }\n\n    double getSaldo() const {\n        return saldo;\n    }\n};\n```\n\nCompreender o ciclo de vida de um objeto e como a referência interna (`this` / `self`) diferencia o estado de uma instância do estado de outra é o pré-requisito técnico indispensável para avançar para encapsulamento e herança.",
+ "useCase": "Imagine que você trabalha no backend de um gateway de pagamentos. Na versão legado do sistema, os dados dos pedidos eram trafegados como dicionários/hashes desestruturados (`{'id': 102, 'valor': 150.0, 'status': 'pago'}`). Funções espalhadas pelo código alteravam diretamente a chave `valor` de forma indevida, gerando inconsistências financeiras auditadas em produção.\n\nPara resolver o problema, a equipe refatorou o módulo criando uma classe `Pedido` com atributos privados/protegidos e métodos explícitos como `processar_pagamento()` e `aplicar_desconto()`. Ao centralizar a validação e a mutação de estado dentro da própria classe, foi possível garantir que nenhuma alteração de valor ocorresse sem aplicar as regras de negócio vigentes.",
+ "diagram": {
+  "kind": "tree",
+  "title": "Instanciação de Objetos a partir do Molde (Classe)",
+  "nodes": [
+   {
+    "id": "class",
+    "label": "Classe: ContaBancaria (Blueprint com atributos e métodos)"
+   },
+   {
+    "id": "inst1",
+    "label": "Objeto 1 (Heap): titular='Alice', saldo=1500.0"
+   },
+   {
+    "id": "inst2",
+    "label": "Objeto 2 (Heap): titular='Bob', saldo=1250.0"
+   }
+  ],
+  "edges": [
+   {
+    "from": "class",
+    "to": "inst1",
+    "label": "new / __init__"
+   },
+   {
+    "from": "class",
+    "to": "inst2",
+    "label": "new / __init__"
+   }
+  ]
+ },
+ "vocabulary": [
+  {
+   "term": "Classe",
+   "definition": "Modelo ou abstração que define os atributos e comportamentos que os objetos criados a partir dela terão.",
+   "example": "class Usuario { constructor(nome) { this.nome = nome; } }"
+  },
+  {
+   "term": "Objeto",
+   "definition": "Uma instância concreta de uma classe alocada em memória que possui estado e comportamento.",
+   "example": "const u1 = new Usuario('Carlos');"
+  },
+  {
+   "term": "Construtor",
+   "definition": "Método especial invocado automaticamente no momento da instanciação para inicializar o objeto.",
+   "example": "def __init__(self, saldo): self.saldo = saldo"
+  },
+  {
+   "term": "self / this",
+   "definition": "Referência ou ponteiro interno que aponta para a instância atual do objeto em execução.",
+   "example": "this.saldo += valor;"
+  },
+  {
+   "term": "Atributo",
+   "definition": "Variável associada a uma classe ou objeto que armazena dados referentes ao seu estado.",
+   "example": "self.titular = titular"
+  }
+ ],
+ "exercises": [
+  {
+   "kind": "multiple_choice",
+   "prompt": "Qual é a função do parâmetro `self` em métodos de instância na linguagem Python?",
+   "code": null,
+   "options": [
+    "Referenciar explicitamente a instância atual do objeto em execução.",
+    "Referenciar a classe base pai de onde o objeto herda.",
+    "Definir uma variável global acessível por qualquer função do arquivo.",
+    "Importar módulos do interpretador Python automaticamente."
+   ],
+   "answer": "Referenciar explicitamente a instância atual do objeto em execução.",
+   "explanation": "Em Python, o parâmetro `self` é passado explicitamente aos métodos de instância para que a função consiga acessar e modificar os atributos do objeto específico que a chamou."
+  },
+  {
+   "kind": "true_false",
+   "prompt": "Em JavaScript (ES6+), métodos declarados dentro do bloco de uma `class` exigem a palavra-chave `function` antes de seus nomes.",
+   "code": "class Usuario {\n  function getNome() {\n    return this.nome;\n  }\n}",
+   "options": [
+    "Verdadeiro",
+    "Falso"
+   ],
+   "answer": "Falso",
+   "explanation": "Na sintaxe de classes do ES6 em JavaScript, métodos são definidos diretamente pelo seu nome e parênteses (ex: `getNome()`). Incluir a palavra-chave `function` dentro do corpo de uma classe gera um erro de sintaxe (`SyntaxError`)."
+  },
+  {
+   "kind": "fill_blank",
+   "prompt": "Em Java, para alocar memória e instanciar um objeto a partir de uma classe, utiliza-se a palavra-chave ____.",
+   "code": "Carro meuCarro = ____ Carro();",
+   "options": null,
+   "answer": "new",
+   "explanation": "O operador `new` é responsável por alocar memória dinamicamente no Heap e disparar o construtor da classe especificada em linguagens como Java, C++ e JavaScript."
+  },
+  {
+   "kind": "match_pairs",
+   "prompt": "Associe cada linguagem de programação à sintaxe utilizada para declarar o seu construtor de classe.",
+   "code": null,
+   "options": [
+    "Python::def __init__(self):",
+    "JavaScript::constructor()",
+    "Java::public NomeDaClasse()",
+    "C++::NomeDaClasse()"
+   ],
+   "answer": "Python::def __init__(self):|JavaScript::constructor()|Java::public NomeDaClasse()|C++::NomeDaClasse()",
+   "explanation": "Python utiliza o método dunder `__init__`, JavaScript usa a palavra reservada `constructor`, enquanto Java e C++ usam métodos com o mesmo nome exato da classe."
+  },
+  {
+   "kind": "order_tokens",
+   "prompt": "Ordene os tokens abaixo para realizar a instanciação válida de um objeto da classe `Pessoa` em Python atribuindo-o à variável `p1`.",
+   "code": null,
+   "options": [
+    "=",
+    "Pessoa(\"Carlos\")",
+    "p1"
+   ],
+   "answer": "p1 = Pessoa(\"Carlos\")",
+   "explanation": "Em Python, instanciamos uma classe invocando seu nome como uma função e atribuindo a referência do novo objeto a uma variável."
+  },
+  {
+   "kind": "multiple_choice",
+   "prompt": "Analise o trecho de código em C++ abaixo. Qual será o valor impresso no console após a execução do programa?",
+   "code": "#include <iostream>\n\nclass Contador {\npublic:\n    int valor;\n    Contador(int v) : valor(v) {}\n    void incrementar() {\n        valor++;\n    }\n};\n\nint main() {\n    Contador c(5);\n    c.incrementar();\n    std::cout << c.valor;\n    return 0;\n}",
+   "options": [
+    "5",
+    "6",
+    "0",
+    "Erro de compilação"
+   ],
+   "answer": "6",
+   "explanation": "O objeto `c` é inicializado com `valor = 5` via construtor. O método `incrementar()` soma 1 a esse valor, resultando em `6`, que é subsequentemente impresso por `std::cout`."
+  },
+  {
+   "kind": "true_false",
+   "prompt": "Ao instanciar um objeto em C++ na Stack (como `Contador c;`), todos os seus atributos numéricos inteiros são automaticamente inicializados com o valor zero pelo compilador.",
+   "code": null,
+   "options": [
+    "Verdadeiro",
+    "Falso"
+   ],
+   "answer": "Falso",
+   "explanation": "Diferente do Java, o C++ não inicializa automaticamente variáveis locais ou atributos de objetos criados na Stack com zero por padrão; eles contêm 'lixo de memória' indesejado até que sejam explicitamente inicializados pelo construtor."
+  },
+  {
+   "kind": "fill_blank",
+   "prompt": "Em Python, para definir ou modificar um atributo do próprio objeto dentro do método `__init__`, deve-se utilizar a variável ____.",
+   "code": "class Produto:\n    def __init__(self, preco):\n        ____.preco = preco",
+   "options": null,
+   "answer": "self",
+   "explanation": "Sem a referência `self.`, a variável `preco` seria tratada apenas como um argumento/variável local da função `__init__` e não seria salva como atributo na instância."
+  },
+  {
+   "kind": "multiple_choice",
+   "prompt": "Qual é a sintaxe correta para criar uma nova instância da classe `Pessoa` em JavaScript?",
+   "code": null,
+   "options": [
+    "const p = new Pessoa();",
+    "const p = Pessoa.create();",
+    "Pessoa p = alloc Pessoa();",
+    "const p = class Pessoa();"
+   ],
+   "answer": "const p = new Pessoa();",
+   "explanation": "JavaScript utiliza a palavra reservada `new` seguida da chamada ao nome da classe para alocar um objeto e disparar seu `constructor`."
+  }
+ ],
+ "trackId": "programming-languages",
+ "world": "academic",
+ "order": 6,
+ "slug": "programming-languages-6",
+ "xp": 35,
+ "source": {
+  "kind": "consolidated"
+ }
+}

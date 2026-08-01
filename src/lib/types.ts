@@ -1,5 +1,5 @@
 export type MascotState = 'feliz' | 'apaixonado' | 'cansado' | 'conectando' | 'programando' | 'ouvindo_musica' | 'bravo' | 'erro404'
-export type View = 'inicio' | 'aprender' | 'projetos' | 'ranking' | 'amigos' | 'loja' | 'perfil'
+export type View = 'inicio' | 'aprender' | 'projetos' | 'ranking' | 'amigos' | 'loja' | 'perfil' | 'flashcards' | 'documentos' | 'agenda' | 'config'
 export type WorldId = 'academic' | 'english' | 'bootcamp'
 
 export interface UserProfile {
@@ -18,6 +18,8 @@ export interface UserProfile {
   gems: number
   dailyGoal: number
   dailyXp: number
+  pace?: 'casual' | 'regular' | 'serio' | 'insano'
+  goalWorld?: WorldId
 }
 
 export interface LessonNode {

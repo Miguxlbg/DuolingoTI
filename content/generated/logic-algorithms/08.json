@@ -1,0 +1,213 @@
+{
+ "title": "Algoritmos Gulosos: Decisões Locais, Resultado Global",
+ "context": "No desenvolvimento de sistemas de alta performance, constantemente nos deparamos com problemas de otimização combinatória: agendamento de tarefas em CPUs, roteamento de pacotes na rede ou compressão de arquivos. Testar todas as combinações possíveis via força bruta resulta em complexidade exponencial como O(2^n) ou O(n!), tornando a execução impraticável até mesmo para conjuntos pequenos de dados.\n\nPara solucionar esses cenários com eficiência, utilizam-se os Algoritmos Gulosos (Greedy Algorithms). A estratégia consiste em tomar, a cada passo, a decisão que parece ser a mais vantajosa no momento (ótimo local), sem nunca retroceder (sem backtracking). A premissa central é que a acumulação dessas escolhas locais ideais resultará na solução ótima para o problema inteiro (ótimo global).\n\nCompreender o funcionamento, as vantagens e, principalmente, as limitações dessa abordagem é indispensável para engenheiros de software. Escolher uma heurística gulosa para um problema que exige análise global ou programação dinâmica pode introduzir bugs sutis de lógica e respostas incorretas em sistemas críticos de produção.",
+ "theory": "Um algoritmo guloso constrói uma solução passo a passo, sempre escolhendo a opção de maior benefício imediato com base em um critério pré-definido. Para que um algoritmo guloso garanta a solução globalmente ótima de um problema, o problema deve possuir duas propriedades matemáticas cruciais:\n\n1. **Propriedade da Escolha Gulosa (Greedy Choice Property):** Uma solução ótima global pode ser alcançada fazendo escolhas locais ótimas sem precisar reconsiderar decisões passadas ou antecipar opções futuras.\n2. **Subestrutura Ótima (Optimal Substructure):** A solução ótima para o problema contém, em seu interior, soluções ótimas para os seus subproblemas.\n\n### Problema Clássico: Agendamento de Atividades (Interval Scheduling)\nDado um conjunto de $n$ atividades, onde cada atividade $i$ possui um horário de início $s_i$ e um horário de término $f_i$, queremos selecionar o maior número possível de atividades mutuamente compatíveis (que não se sobreponham).\n\nUma estratégia gulosa correta para este problema é **ordenar as atividades pelo horário de término ($f_i$) em ordem crescente** e, iterativamente, selecionar a primeira atividade compatível com a última selecionada. Essa escolha abre o maior espaço de tempo possível para as atividades subsequentes.\n\nVeja o código funcional em Python abaixo executando essa estratégia:\n\n```python\ndef selecionar_atividades(atividades):\n    # Ordena as atividades com base no horário de término (segundo elemento da tupla)\n    atividades_ordenadas = sorted(atividades, key=lambda x: x[1])\n    \n    atividades_selecionadas = []\n    ultimo_horario_fim = 0\n    \n    for inicio, fim in atividades_ordenadas:\n        # Se o horário de início for maior ou igual ao término da última selecionada\n        if inicio >= ultimo_horario_fim:\n            atividades_selecionadas.append((inicio, fim))\n            ultimo_horario_fim = fim  # Atualiza o tempo de término\n            \n    return atividades_selecionadas\n\n# Conjunto de testes: tuplas no formato (início, fim)\nlista_atividades = [(1, 4), (3, 5), (0, 6), (5, 7), (3, 9), (5, 9), (6, 10), (8, 11), (8, 12), (2, 14), (12, 16)]\nresultado = selecionar_atividades(lista_atividades)\n\nprint(f\"Atividades selecionadas: {resultado}\")\n# Saída esperada: [(1, 4), (5, 7), (8, 11), (12, 16)]\n```\n\nA complexidade temporal desse algoritmo é dominada pela etapa de ordenação, sendo **$O(N \\log N)$**, e a complexidade de espaço é **$O(N)$** para armazenar o resultado. Se tentássemos usar força bruta testando todos os subconjuntos, a complexidade seria $O(2^N)$.\n\n### Quando a Abordagem Gulosa Falha\nAlgoritmos gulosos nem sempre produzem a solução correta. Considere o **Problema do Troco (Coin Change)**: para dar o troco de valor 6 com moedas de valores [1, 3, 4], o algoritmo guloso pegaria primeiro a maior moeda (4) e depois duas moedas de (1), totalizando 3 moedas (4, 1, 1). No entanto, a solução ótima usa apenas 2 moedas (3, 3). Portanto, para sistemas de moedas arbitrários ou no problema da **Mochila 0/1**, a abordagem gulosa falha, sendo necessária a Programação Dinâmica.",
+ "useCase": "Imagine que você é responsável pela arquitetura do sistema de execução de jobs assíncronos de uma plataforma de cloud computing. O sistema recebe centenas de milhares de tarefas por segundo, cada uma exigindo uma janela de tempo exclusiva no processador. O objetivo é processar a maior quantidade total de tarefas por servidor sem sobreposição de horários.\n\nAplicar a estratégia gulosa de ordenação por horário de término permite ao seu cluster tomar decisões determinísticas em tempo $O(N \\log N)$. Isso otimiza o uso do hardware ao limite máximo do ponto de vista combinatório, evitando o gargalo e custo de algoritmos de força bruta ou modelos dinâmicos pesados.",
+ "diagram": {
+  "kind": "flow",
+  "title": "Fluxo de Decisão do Algoritmo Guloso",
+  "nodes": [
+   {
+    "id": "n1",
+    "label": "Recebe conjunto de dados e ordena pelo critério guloso"
+   },
+   {
+    "id": "n2",
+    "label": "Pega o próximo candidato da lista ordenada"
+   },
+   {
+    "id": "n3",
+    "label": "O candidato é viável e compatível com a solução atual?"
+   },
+   {
+    "id": "n4",
+    "label": "Adiciona o candidato à solução final"
+   },
+   {
+    "id": "n5",
+    "label": "Descarta candidato irreversivelmente"
+   }
+  ],
+  "edges": [
+   {
+    "from": "n1",
+    "to": "n2"
+   },
+   {
+    "from": "n2",
+    "to": "n3"
+   },
+   {
+    "from": "n3",
+    "to": "n4",
+    "label": "Sim"
+   },
+   {
+    "from": "n3",
+    "to": "n5",
+    "label": "Não"
+   },
+   {
+    "from": "n4",
+    "to": "n2",
+    "label": "Existem mais itens?"
+   },
+   {
+    "from": "n5",
+    "to": "n2",
+    "label": "Existem mais itens?"
+   }
+  ]
+ },
+ "vocabulary": [
+  {
+   "term": "Propriedade da Escolha Gulosa",
+   "definition": "Característica de um problema em que uma decisão ótima local leva diretamente a uma solução ótima global.",
+   "example": "No problema das atividades, escolher o menor tempo de término satisfaz a propriedade da escolha gulosa."
+  },
+  {
+   "term": "Subestrutura Ótima",
+   "definition": "Propriedade em que a solução ideal de um problema contém as soluções ideais de seus subproblemas componentes.",
+   "example": "Caminhos mínimos em grafos possuem subestrutura ótima porque qualquer trecho de um caminho mínimo é também um caminho mínimo."
+  },
+  {
+   "term": "Interval Scheduling",
+   "definition": "Problema clássico de seleção de intervalos sem sobreposição que minimiza conflitos e maximiza a quantidade de tarefas.",
+   "example": "O agendamento de reuniões em uma única sala é um problema de Interval Scheduling."
+  },
+  {
+   "term": "Mochila Fracionária",
+   "definition": "Variação do problema da mochila onde é possível fracionar itens. É resolvido de forma ótima por algoritmos gulosos.",
+   "example": "Ao carregar grãos ou líquidos em um contêiner, podemos pegar frações baseadas no valor por quilo."
+  },
+  {
+   "term": "Mochila 0/1",
+   "definition": "Variação em que os itens são indivisíveis (pega ou não pega). Não pode ser resolvida de forma ótima por algoritmos gulosos.",
+   "example": "Carregar notebooks ou eletrodomésticos inteiros em um caminhão exige Programação Dinâmica."
+  }
+ ],
+ "exercises": [
+  {
+   "kind": "multiple_choice",
+   "prompt": "Qual é a principal característica que define a estratégia de um algoritmo guloso?",
+   "code": null,
+   "options": [
+    "Fazer a melhor escolha local a cada passo sem voltar atrás para reconsiderar.",
+    "Testar todas as combinações possíveis e escolher a melhor via força bruta.",
+    "Dividir o problema ao meio recursivamente e combinar as soluções.",
+    "Realizar backtracking sempre que uma escolha intermediária falhar."
+   ],
+   "answer": "Fazer a melhor escolha local a cada passo sem voltar atrás para reconsiderar.",
+   "explanation": "A essência de um algoritmo guloso é a tomada de decisão miope: escolhe-se o melhor candidato imediato sem efetuar backtracking ou reavaliar escolhas anteriores."
+  },
+  {
+   "kind": "true_false",
+   "prompt": "Algoritmos gulosos sempre encontram a solução ótima global para qualquer problema de otimização combinatória.",
+   "code": null,
+   "options": [
+    "Verdadeiro",
+    "Falso"
+   ],
+   "answer": "Falso",
+   "explanation": "Algoritmos gulosos só garantem a solução ótima global para problemas que possuem a propriedade da escolha gulosa e subestrutura ótima, como no Interval Scheduling ou na Mochila Fracionária. Em problemas como a Mochila 0/1, eles falham."
+  },
+  {
+   "kind": "fill_blank",
+   "prompt": "No problema de seleção de atividades (Interval Scheduling), para garantir a solução ótima, devemos ordenar o conjunto de atividades pelo horário de ____________.",
+   "code": null,
+   "options": null,
+   "answer": "término",
+   "explanation": "Ordenar pelo horário de término deixa o máximo de tempo livre restante para alocar as demais atividades compatíveis, provando ser o critério guloso correto."
+  },
+  {
+   "kind": "match_pairs",
+   "prompt": "Associe cada tipo de problema com a viabilidade da abordagem gulosa para encontrar a solução ótima:",
+   "code": null,
+   "options": [
+    "Mochila Fracionária::Algoritmo Guloso é Ótimo",
+    "Mochila 0/1::Algoritmo Guloso Falha (Exige Dinâmica)",
+    "Interval Scheduling::Algoritmo Guloso é Ótimo",
+    "Caixeiro Viajante (TSP)::Algoritmo Guloso produz Heurística/Aproximação"
+   ],
+   "answer": "Mochila Fracionária::Algoritmo Guloso é Ótimo|Mochila 0/1::Algoritmo Guloso Falha (Exige Dinâmica)|Interval Scheduling::Algoritmo Guloso é Ótimo|Caixeiro Viajante (TSP)::Algoritmo Guloso produz Heurística/Aproximação",
+   "explanation": "Problemas fracionários e de agendamento por término possuem a propriedade da escolha gulosa. Já a Mochila 0/1 e o Caixeiro Viajante exigem outras abordagens para soluções exatas."
+  },
+  {
+   "kind": "order_tokens",
+   "prompt": "Ordene os passos para resolver o problema da seleção de atividades de forma gulosa:",
+   "code": null,
+   "options": [
+    "Iterar",
+    "Ordenadas",
+    "Atividades",
+    "Término",
+    "Compatíveis",
+    "Pelo",
+    "Adicionando"
+   ],
+   "answer": "Ordenar atividades pelo término iterar adicionando compatíveis",
+   "explanation": "O fluxo correto do algoritmo consiste em primeiramente ordenar pelo horário de término e depois iterar pela lista incluindo apenas as tarefas compatíveis."
+  },
+  {
+   "kind": "multiple_choice",
+   "prompt": "Considere o snippet de código em Python abaixo. Qual será a saída do programa?",
+   "code": "def troco_guloso(moedas, valor):\n    moedas.sort(reverse=True)\n    qtd = 0\n    for m in moedas:\n        qtd += valor // m\n        valor %= m\n    return qtd\n\nprint(troco_guloso([1, 3, 4], 6))",
+   "options": [
+    "2",
+    "3",
+    "4",
+    "1"
+   ],
+   "answer": "3",
+   "explanation": "O algoritmo guloso pega primeiro 1 moeda de 4 (sobra 2). Em seguida, pega 2 moedas de 1 para perfazer 2. Total: 1 + 2 = 3 moedas. A solução ótima real seria 2 moedas (3+3), demonstrando a falha do método guloso para este sistema de moedas."
+  },
+  {
+   "kind": "true_false",
+   "prompt": "A complexidade de tempo do algoritmo de Interval Scheduling apresentado é dominada pela etapa de ordenação, resultando em O(N log N).",
+   "code": null,
+   "options": [
+    "Verdadeiro",
+    "Falso"
+   ],
+   "answer": "Verdadeiro",
+   "explanation": "A ordenação das N atividades leva O(N log N). O laço de repetição subsequente para selecionar as atividades compatíveis roda em tempo linear O(N). Logo, o custo assintótico total é O(N log N)."
+  },
+  {
+   "kind": "fill_blank",
+   "prompt": "Uma das propriedades fundamentais para aplicar algoritmos gulosos é a propriedade da escolha ____________, onde uma escolha local ideal conduz à solução global ótima.",
+   "code": null,
+   "options": null,
+   "answer": "gulosa",
+   "explanation": "A 'propriedade da escolha gulosa' (Greedy Choice Property) garante formalmente que a escolha míope local de fato compõe a solução global ideal."
+  },
+  {
+   "kind": "open_writing",
+   "prompt": "Explique resumidamente por que a estratégia gulosa de pegar a moeda de maior valor falha ao calcular o troco mínimo para o valor 6 usando as moedas [1, 3, 4].",
+   "code": null,
+   "options": null,
+   "answer": "Ao pegar a maior moeda (4) de maneira gulosa, o valor restante passa a ser 2, obrigando o uso de duas moedas de 1 (totalizando 3 moedas). No entanto, se não fossemos gulosos no primeiro passo, poderíamos usar duas moedas de valor 3 para somar 6 (totalizando apenas 2 moedas), obtendo um resultado melhor.",
+   "explanation": "A escolha local da moeda de valor 4 impede o algoritmo de enxergar a combinação simétrica ideal de 3 + 3, provando que o ótimo local nem sempre resulta no ótimo global."
+  },
+  {
+   "kind": "multiple_choice",
+   "prompt": "Ao resolver o problema da Mochila Fracionária, qual deve ser o critério de ordenação dos itens para garantir o resultado ótimo via algoritmo guloso?",
+   "code": null,
+   "options": [
+    "Razão entre o valor do item e seu peso (valor/peso) em ordem decrescente.",
+    "Apenas o valor bruto do item em ordem decrescente.",
+    "Apenas o menor peso do item em ordem crescente.",
+    "Ordem alfabética dos nomes dos itens."
+   ],
+   "answer": "Razão entre o valor do item e seu peso (valor/peso) em ordem decrescente.",
+   "explanation": "Na mochila fracionária, priorizar os itens que oferecem o maior 'valor por unidade de peso' garante que a capacidade do recipiente seja preenchida da forma mais rentável possível."
+  }
+ ],
+ "trackId": "logic-algorithms",
+ "world": "academic",
+ "order": 8,
+ "slug": "logic-algorithms-8",
+ "xp": 41,
+ "source": {
+  "kind": "consolidated"
+ }
+}
