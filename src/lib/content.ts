@@ -23,6 +23,7 @@ export interface ContentLesson {
   order: number
   slug: string
   xp: number
+  source?: { kind: 'user_material' | 'consolidated'; files?: string[] }
 }
 
 export interface TrackIndexLesson { n: number; title: string; slug: string; has: boolean; xp: number }

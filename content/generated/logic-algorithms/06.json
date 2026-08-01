@@ -1,0 +1,189 @@
+{
+ "title": "Complexidade de espaço: memória também tem preço",
+ "context": "Quando aprendemos a otimizar algoritmos, o foco inicial recai quase sempre na complexidade de tempo (contagem de instruções executadas em relação ao tamanho da entrada). Contudo, em sistemas de grande escala em produção — como microserviços que processam eventos em tempo real, bancos de dados em memória e aplicações mobile —, o consumo de memória RAM e da pilha de execução (call stack) é um gargalo tão ou mais crítico quanto a CPU.\n\nIgnorar a complexidade de espaço (Space Complexity) causa falhas catastróficas frequentes. Em ambientes de nuvem como Kubernetes, pods que ultrapassam a cota de memória alocada sofrem encerramento repentino pelo sistema operacional via *OOM Killer* (Out Of Memory Killer). Da mesma forma, algoritmos recursivos descontrolados estouram o limite da pilha do processo, gerando exceções fatais de *Stack Overflow*.\n\nProjetar software de alto desempenho exige balancear consumo de memória e velocidade de processamento. Nesta lição, você aprenderá a analisar a memória auxiliar exigida por algoritmos e aplicar estratégias *in-place* para garantir escalabilidade contínua.",
+ "theory": "A **Complexidade de Espaço** de um algoritmo descreve a quantidade total de memória necessária para que ele execute até a conclusão, em função do tamanho da entrada $N$.\n\n### Espaço Total vs. Espaço Auxiliar\n\nPara efetuar uma análise rigorosa, dividimos o uso de memória em duas partes:\n\n1. **Espaço de Entrada (Input Space):** O espaço consumido pelos próprios dados recebidos pelo algoritmo (por exemplo, um vetor de 1.000.000 de inteiros já carregado na memória).\n2. **Espaço Auxiliar (Auxiliary Space):** Toda a memória temporária extra alocada pelo algoritmo durante seu processamento interno (variáveis locais, novas estruturas de dados alocadas dinamicamente ou quadros de pilha na chamada de funções).\n\nAo classificar algoritmos, o foco principal de otimização de engenharia reside no **Espaço Auxiliar**. Um algoritmo é chamado de **In-Place** (no local) quando seu espaço auxiliar é $O(1)$, ou seja, ele opera transformando os dados diretamente dentro da estrutura de entrada existente, sem exigir alocações que cresçam com $N$.\n\n### Alocação na Heap vs. Pilha de Chamadas (Call Stack)\n\nA memória ocupada por um algoritmo distribui-se em dois cenários fundamentais:\n\n- **Heap:** Área de memória utilizada para alocação dinâmica de objetos, listas e tabelas Hash durante o tempo de execução. Se você instancia um novo array de tamanho $N$, aloca $O(N)$ na Heap.\n- **Call Stack (Pilha de Chamadas):** Área de memória mantida pelo runtime para gerenciar invocações de funções. Toda chamada de função empilha um *stack frame* contendo parâmetros e variáveis locais. Algoritmos recursivos sem recursão de cauda que realizam $N$ chamadas aninhadas consomem $O(N)$ de memória de pilha, mesmo que nenhuma variável seja criada na Heap.\n\n### Exemplo Real em Python\n\nAnalise abaixo a diferença fundamental entre uma inversão de lista que cria uma cópia auxiliar $O(N)$ e uma abordagem *In-Place* $O(1)$:\n\n```python\n# Abordagem 1: Espaço Auxiliar O(N)\n# Cria uma nova lista na memória RAM proporcional ao tamanho de arr\ndef inverter_com_copia(arr):\n    nova_lista = []\n    for i in range(len(arr) - 1, -1, -1):\n        nova_lista.append(arr[i])\n    return nova_lista\n\n# Abordagem 2: Espaço Auxiliar O(1) - Algoritmo In-Place\n# Modifica a lista original utilizando apenas dois ponteiros mantidos em memória constante\ndef inverter_in_place(arr):\n    inicio = 0\n    fim = len(arr) - 1\n    while inicio < fim:\n        # Troca os elementos diretamente no vetor original\n        arr[inicio], arr[fim] = arr[fim], arr[inicio]\n        inicio += 1\n        fim -= 1\n    return arr\n\n# Execução de teste demonstrando ambos os métodos\ndados1 = [10, 20, 30, 40, 50]\ndados2 = [10, 20, 30, 40, 50]\n\nprint(\"Resultado Cópia:\", inverter_com_copia(dados1))\nprint(\"Resultado In-Place:\", inverter_in_place(dados2))\n```\n\n### Trade-offs de Arquitetura\n\nReduzir espaço auxiliar nem sempre é gratuito. Abordagens *in-place* alteram a estrutura original (mutabilidade), o que exige extremo cuidado em ambientes concorrentes/multithreaded para evitar *race conditions*. Em contrapartida, criar instâncias cópias e imutáveis simplifica a programação concorrente, mas gera forte pressão sobre o *Garbage Collector*, podendo elevar a latência do sistema.",
+ "useCase": "Durante um evento de alta demanda (Black Friday), o microserviço de busca de um e-commerce apresentou falhas sistemáticas de indisponibilidade. O diagnóstico via métricas revelou que o container Docker era finalizado pelo mecanismo OOMKilled do Linux após o uso de memória ultrapassar 4 GB. A causa-raiz era um filtro de ordenação de produtos recursivo que duplicava sub-arrays filtrados a cada nível da árvore de decisão.\n\nA reestruturação do algoritmo para uma abordagem iterativa e *in-place* reduziu a alocação auxiliar por requisição de $O(N \\log N)$ para $O(1)$. Como resultado direto, a pegada de memória do serviço despencou de 4 GB para apenas 180 MB sob carga máxima, zerando as quedas por falta de memória sem necessidade de contratar servidores adicionais.",
+ "diagram": {
+  "kind": "flow",
+  "title": "Alocação de Memória: Estratégias Auxiliares",
+  "nodes": [
+   {
+    "id": "input",
+    "label": "Array de Entrada (Tamanho N)"
+   },
+   {
+    "id": "aux",
+    "label": "Cópia Auxiliar: Aloca novo array O(N) na Heap"
+   },
+   {
+    "id": "inplace",
+    "label": "In-Place: Troca direta usando ponteiros O(1)"
+   },
+   {
+    "id": "gc",
+    "label": "Impacto: Pressão no Garbage Collector / Risco OOM"
+   },
+   {
+    "id": "perf",
+    "label": "Impacto: Uso mínimo de RAM / Operação segura"
+   }
+  ],
+  "edges": [
+   {
+    "from": "input",
+    "to": "aux",
+    "label": "Abordagem com Cópia"
+   },
+   {
+    "from": "input",
+    "to": "inplace",
+    "label": "Abordagem In-Place"
+   },
+   {
+    "from": "aux",
+    "to": "gc",
+    "label": "Consome O(N) extra"
+   },
+   {
+    "from": "inplace",
+    "to": "perf",
+    "label": "Consome O(1) extra"
+   }
+  ]
+ },
+ "vocabulary": [
+  {
+   "term": "Auxiliary Space",
+   "definition": "Memória temporária extra utilizada por um algoritmo durante sua execução, excluindo a entrada original.",
+   "example": "Uma variável de contagem 'i' usada dentro de um loop consome O(1) de espaço auxiliar."
+  },
+  {
+   "term": "In-Place Algorithm",
+   "definition": "Algoritmo que transforma a estrutura de dados de entrada diretamente sem alocar espaço proporcional a N.",
+   "example": "O algoritmo de ordenação HeapSort é In-Place pois ordena o array com O(1) de espaço auxiliar."
+  },
+  {
+   "term": "Call Stack",
+   "definition": "Estrutura de dados da memória que armazena os quadros de contexto das funções ativas em execução.",
+   "example": "Recursões profundas acumulam milhares de quadros na Call Stack até atingir o caso base."
+  },
+  {
+   "term": "OOM Killer",
+   "definition": "Processo do kernel do sistema operacional que encerra aplicações quando a memória física é totalmente esgotada.",
+   "example": "O Kubernetes registrou status OOMKilled no pod após uma alocação contínua de memória sem desalocação."
+  },
+  {
+   "term": "Stack Overflow",
+   "definition": "Erro fatal que ocorre quando a pilha de chamadas excede a quantidade fixa de memória alocada para ela.",
+   "example": "Uma função recursiva sem condição de parada adequada lança exceção de Stack Overflow."
+  }
+ ],
+ "exercises": [
+  {
+   "kind": "multiple_choice",
+   "prompt": "Qual é a complexidade de espaço auxiliar do seguinte código Python?",
+   "code": "def inverter_lista(lista):\n    invertida = []\n    for i in range(len(lista) - 1, -1, -1):\n        invertida.append(lista[i])\n    return invertida",
+   "options": [
+    "O(1)",
+    "O(N)",
+    "O(N^2)",
+    "O(log N)"
+   ],
+   "answer": "O(N)",
+   "explanation": "O código cria e preenche uma nova lista chamada 'invertida' com N elementos copiados do vetor original. Como o tamanho desta nova estrutura cresce proporcionalmente ao tamanho da entrada, o espaço auxiliar alocado é O(N)."
+  },
+  {
+   "kind": "multiple_choice",
+   "prompt": "Analise a função recursiva abaixo. Qual é a complexidade de espaço ocupada na pilha de chamadas (Call Stack) no pior caso?",
+   "code": "def fatorial(n):\n    if n <= 1:\n        return 1\n    return n * fatorial(n - 1)",
+   "options": [
+    "O(1)",
+    "O(N)",
+    "O(N^2)",
+    "O(2^N)"
+   ],
+   "answer": "O(N)",
+   "explanation": "A cada chamada recursiva fatorial(n - 1), um novo quadro é inserido na Call Stack. A pilha alcançará uma profundidade máxima de N quadros simultâneos até que o caso base (n <= 1) seja atingido e a desempilhação comece. Logo, o espaço de pilha é O(N)."
+  },
+  {
+   "kind": "true_false",
+   "prompt": "A complexidade de espaço auxiliar inclui a memória consumida pela própria estrutura de dados de entrada do problema.",
+   "code": null,
+   "options": [
+    "Verdadeiro",
+    "Falso"
+   ],
+   "answer": "Falso",
+   "explanation": "O Espaço Auxiliar mede exclusivamente a memória extra temporária alocada pelo algoritmo para realizar o processamento. O tamanho da entrada é contabilizado apenas no cálculo da Complexidade de Espaço Total."
+  },
+  {
+   "kind": "true_false",
+   "prompt": "Um algoritmo In-Place que realiza alterações diretamente na estrutura de dados de entrada possui complexidade de espaço auxiliar de O(1).",
+   "code": null,
+   "options": [
+    "Verdadeiro",
+    "Falso"
+   ],
+   "answer": "Verdadeiro",
+   "explanation": "Algoritmos In-Place transformam os dados dentro do próprio espaço da entrada original, necessitando apenas de uma quantidade constante de memória adicional O(1) para variáveis de controle ou ponteiros temporários."
+  },
+  {
+   "kind": "fill_blank",
+   "prompt": "Quando chamadas recursivas são realizadas sem limite ou sem alcançar a condição de parada, o estouro do limite fixo da pilha de execução resulta no erro técnico chamado ____.",
+   "code": null,
+   "options": null,
+   "answer": "Stack Overflow",
+   "explanation": "O erro de Stack Overflow ocorre especificamente quando a região reservada de memória Call Stack da thread é completamente preenchida por quadros de chamadas de função pendentes."
+  },
+  {
+   "kind": "match_pairs",
+   "prompt": "Associe a estrutura ou algoritmo à sua respectiva complexidade de espaço auxiliar típica:",
+   "code": null,
+   "options": [
+    "Algoritmo In-Place::O(1)",
+    "Matriz de adjacência NxN::O(N^2)",
+    "Cópia de array com N elementos::O(N)",
+    "Recursão em árvore balanceada de altura H::O(H)"
+   ],
+   "answer": "Algoritmo In-Place::O(1)|Matriz de adjacência NxN::O(N^2)|Cópia de array com N elementos::O(N)|Recursão em árvore balanceada de altura H::O(H)",
+   "explanation": "Operações In-Place mantêm espaço extra O(1). A duplicação de um vetor de N itens consome O(N). Uma matriz N x N exige O(N^2) posições em memória. A pilha de uma recursão em árvore balanceada é proporcional à sua altura O(H)."
+  },
+  {
+   "kind": "order_tokens",
+   "prompt": "Ordene os tokens para formar a igualdade que define a composição da Complexidade de Espaço Total de um algoritmo:",
+   "code": null,
+   "options": [
+    "+",
+    "Espaço Total",
+    "Auxiliar",
+    "Entrada",
+    "Espaço de",
+    "=",
+    "Espaço"
+   ],
+   "answer": "Espaço Total = Espaço de Entrada + Espaço Auxiliar",
+   "explanation": "A complexidade de espaço total é definida exatamente pela soma da memória consumida pelos dados de entrada fornecidos com a memória adicional alocada pelo próprio algoritmo durante o processamento (espaço auxiliar)."
+  },
+  {
+   "kind": "multiple_choice",
+   "prompt": "Ao processar uma string com N caracteres para contar a frequência de cada letra no alfabeto ASCII padrão (256 caracteres), qual abordagem garante complexidade de espaço auxiliar O(1)?",
+   "code": null,
+   "options": [
+    "Array/Tabela fixa de 256 posições",
+    "Cópia completa da string de entrada",
+    "Matriz N x N de booleanos",
+    "Lista encadeada dinâmica expandida a cada caractere"
+   ],
+   "answer": "Array/Tabela fixa de 256 posições",
+   "explanation": "Um vetor com exatamente 256 posições consome um montante de memória fixo, independentemente de N ser 10 ou 10.000.000. Como o tamanho da tabela não depende de N, o espaço auxiliar alocado é constante, ou seja, O(1)."
+  }
+ ],
+ "trackId": "logic-algorithms",
+ "world": "academic",
+ "order": 6,
+ "slug": "logic-algorithms-6",
+ "xp": 35,
+ "source": {
+  "kind": "consolidated"
+ }
+}

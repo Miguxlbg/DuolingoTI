@@ -70,6 +70,7 @@ export interface UserDocument {
   id: string; kind: 'pdf' | 'certificado' | 'aula' | 'projeto' | 'outro'
   title: string; description: string; skills: string[]
   fileName?: string; textContent?: string; url?: string
+  trackId?: string | null
   addedAt: string
 }
 const DOCS_KEY = 'duoti.documents'

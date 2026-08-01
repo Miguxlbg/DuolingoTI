@@ -11,7 +11,7 @@ import { getCompleted, loadContentIndex, getVocabulary, type ContentIndex } from
 import type { MascotState, UserProfile, View, WorldId } from '@/lib/types'
 import { aiService, appendTutorKnowledge } from '@/services/ai'
 import { getSupabase } from '@/lib/supabase'
-import { socialAvailable, searchUsers, sendFriendRequest, respondFriendRequest, listFriends, friendLeaderboard, createDuel, listDuels, createProjectDuel, listProjectDuels, submitProjectEntry, evaluateProject, type SocialProfile, type FriendEntry, type DuelRow, type ProjectDuelRow, type ProjectEvaluation } from '@/services/social'
+import { socialAvailable, currentUserId, searchUsers, sendFriendRequest, respondFriendRequest, listFriends, friendLeaderboard, createDuel, listDuels, createProjectDuel, listProjectDuels, submitProjectEntry, evaluateProject, type SocialProfile, type FriendEntry, type DuelRow, type ProjectDuelRow, type ProjectEvaluation } from '@/services/social'
 import { translateWithFallback, lookupDictionary, pronounce } from '@/services/translate'
 import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 
@@ -411,12 +411,12 @@ function DocumentsView({profile,onProfile,notify}:{profile:UserProfile;onProfile
     let fileName:string|undefined
     if(f){fileName=f.name;try{text=`${desc}\n\n${await readFile(f)}`}catch{/* segue só com a descrição */}}
     // Sistema APRENDE com o documento (IA ou heurística local)
-    let analysis:{summary?:string;skills?:string[];bioSuggestion?:string|null;knowledge?:string}={}
+    let analysis:{summary?:string;skills?:string[];bioSuggestion?:string|null;knowledge?:string;trackId?:string|null}={}
     try{
-      const res=await fetch('/api/analyze-document',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,kind,text})})
+      const res=await fetch('/api/analyze-document',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,kind,text,fileName,userId:await currentUserId().catch(()=>undefined)})})
       if(res.ok)analysis=await res.json()
     }catch{/* offline */}
-    const doc:UserDocument={id:crypto.randomUUID(),kind,title:title.trim(),description:analysis.summary||desc,skills:analysis.skills||[],fileName,textContent:text.slice(0,8000),addedAt:new Date().toISOString()}
+    const doc:UserDocument={id:crypto.randomUUID(),kind,title:title.trim(),description:analysis.summary||desc,skills:analysis.skills||[],fileName,textContent:text.slice(0,8000),trackId:analysis.trackId||null,addedAt:new Date().toISOString()}
     const next=[doc,...docs];setDocs(next);saveDocuments(next)
     // Atualiza AUTOMATICAMENTE o perfil: skills novas + bio sugerida
     const newSkills=[...new Set([...profile.skills,...(analysis.skills||[])])]
@@ -427,7 +427,20 @@ function DocumentsView({profile,onProfile,notify}:{profile:UserProfile;onProfile
     else appendTutorKnowledge(`[${kind}] O aluno anexou "${title}"${analysis.skills?.length?` envolvendo ${analysis.skills.join(', ')}`:''}.`)
     setTitle('');setDesc('');if(input)input.value=''
     setBusy(false)
-    notify(`Documento analisado! ${analysis.skills?.length?`${analysis.skills.length} skills detectadas e adicionadas ao perfil.`:'Registrado com sucesso.'}`)
+    notify(`Documento analisado! ${analysis.trackId?`Associado à trilha "${analysis.trackId}" — você pode gerar lições com este material. `:''}${analysis.skills?.length?`${analysis.skills.length} skills detectadas.`:'Registrado.'}`)
+  }
+
+  const [genBusy,setGenBusy]=useState('')
+  async function generateFromDoc(d:UserDocument){
+    if(!d.trackId)return
+    setGenBusy(d.id)
+    try{
+      const res=await fetch('/api/generate-track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({trackId:d.trackId,force:true})})
+      const data=await res.json()
+      if(res.ok)notify(data.status==='already_running'?'Geração já em andamento para esta trilha.':`Geração iniciada para "${d.trackId}" usando seu material! As lições atualizam em alguns minutos.`)
+      else notify(data.error||'Não foi possível iniciar a geração.')
+    }catch{notify('Não foi possível iniciar a geração.')}
+    setGenBusy('')
   }
 
   return <section className="page-view">
@@ -447,6 +460,7 @@ function DocumentsView({profile,onProfile,notify}:{profile:UserProfile;onProfile
         <span className={`doc-kind doc-kind--${d.kind}`}><FileText size={16}/></span>
         <div><strong>{d.title}</strong><small>{d.description||d.kind}</small>{d.skills.length>0&&<div className="tag-list">{d.skills.map(s=><i key={s}>{s}</i>)}</div>}</div>
         <time>{new Date(d.addedAt).toLocaleDateString('pt-BR')}</time>
+        {d.trackId&&<button className="secondary-button doc-gen" disabled={genBusy===d.id} title={`Regenerar lições da trilha ${d.trackId} com base neste material`} onClick={()=>generateFromDoc(d)}><Sparkles size={14}/>{genBusy===d.id?'Iniciando…':'Gerar lições'}</button>}
         <button className="icon-button" title="Remover" onClick={()=>{const next=docs.filter(x=>x.id!==d.id);setDocs(next);saveDocuments(next)}}><Trash2 size={16}/></button>
       </article>)}
     </div>

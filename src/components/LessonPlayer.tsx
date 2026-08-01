@@ -3,7 +3,7 @@
 // Player de lição REAL: consome as lições geradas pelo motor de conteúdo
 // (public/content/<track>/<nn>.json) com múltiplos formatos de exercício.
 import { useEffect, useMemo, useState } from 'react'
-import { Volume2, X, Zap, BookOpen } from 'lucide-react'
+import { Volume2, X, Zap, BookOpen, FileText, Sparkles } from 'lucide-react'
 import { Mascot } from './Mascot'
 import { loadLesson, markCompleted, saveVocabulary, type ContentLesson, type ContentExercise } from '@/lib/content'
 import type { MascotState } from '@/lib/types'
@@ -26,7 +26,7 @@ export function LessonPlayer({ trackId, n, dailyXp, onClose, onComplete }: {
 }) {
   const [lesson, setLesson] = useState<ContentLesson | null>(null)
   const [error, setError] = useState('')
-  const [phase, setPhase] = useState<'theory' | 'exercise'>('theory')
+  const [phase, setPhase] = useState<'theory' | 'exercise' | 'done'>('theory')
   const [index, setIndex] = useState(0)
   const [checked, setChecked] = useState(false)
   const [correct, setCorrect] = useState(false)
@@ -80,11 +80,12 @@ export function LessonPlayer({ trackId, n, dailyXp, onClose, onComplete }: {
     if (index === total - 1) {
       markCompleted(lesson!.slug)
       saveVocabulary(lesson!)
-      onComplete(lesson!.xp + Math.max(0, (total - mistakes) * 2), mistakes === 0)
+      setPhase('done')
       return
     }
     setIndex(index + 1); setSelected(''); setTyped(''); setTokens([]); setChecked(false); setMascot('programando')
   }
+  const earnedXp = lesson ? lesson.xp + Math.max(0, (total - mistakes) * 2) : 0
 
   const canVerify = ex && (
     ((ex.kind === 'multiple_choice' || ex.kind === 'true_false') && !!selected) ||
@@ -102,6 +103,9 @@ export function LessonPlayer({ trackId, n, dailyXp, onClose, onComplete }: {
 
     {phase === 'theory' && <section className="theory-view">
       <div className="theory-head"><Mascot state="programando" size="sm" /><div><span className="eyebrow">LIÇÃO {n} · {lesson.trackId.toUpperCase()}</span><h1>{lesson.title}</h1></div></div>
+      <p className="lesson-source">{lesson.source?.kind === 'user_material'
+        ? <><FileText size={13}/> Baseada no material que você enviou{lesson.source.files?.length ? ` (${lesson.source.files.join(', ')})` : ''}</>
+        : <><BookOpen size={13}/> Baseada em conhecimento técnico consolidado</>}</p>
       <article className="theory-block"><h2><BookOpen size={17} /> Por que isso importa</h2><MD text={lesson.context} /></article>
       <article className="theory-block"><h2>Teoria</h2><MD text={lesson.theory} /></article>
       <article className="theory-block theory-block--case"><h2>Na prática</h2><MD text={lesson.useCase} /></article>
@@ -116,7 +120,7 @@ export function LessonPlayer({ trackId, n, dailyXp, onClose, onComplete }: {
           <span className="eyebrow">EXERCÍCIO {index + 1} DE {total} · {ex.kind.replace('_', ' ').toUpperCase()}</span>
           <h1>{ex.prompt}</h1>
           {ex.kind === 'listen_type' && ex.code && <button className="listen-button" onClick={() => speechService.speak(ex.code!)}><Volume2 />Ouvir frase</button>}
-          {ex.code && ex.kind !== 'listen_type' && <pre><code>{ex.code}</code></pre>}
+          {ex.code && ex.kind !== 'listen_type' && <Code text={ex.code} />}
 
           {(ex.kind === 'multiple_choice' || ex.kind === 'true_false') && <div className="answer-grid">
             {(ex.options || []).map((o, i) => <button key={o} className={`${selected === o ? 'is-selected' : ''} ${checked && o === ex.answer ? 'is-correct' : ''} ${checked && selected === o && o !== ex.answer ? 'is-wrong' : ''}`} onClick={() => !checked && setSelected(o)}><kbd>{i + 1}</kbd>{o}</button>)}
@@ -149,14 +153,42 @@ export function LessonPlayer({ trackId, n, dailyXp, onClose, onComplete }: {
         <button className="primary-button" disabled={!canVerify} onClick={checked ? next : verify}>{checked ? (index === total - 1 ? 'Concluir lição' : 'Continuar') : 'Verificar'}</button>
       </footer>
     </>}
+
+    {phase === 'done' && <section className="lesson-done">
+      <div className="lesson-done__burst" aria-hidden>{Array.from({length:14}).map((_,i)=><i key={i} style={{'--i':i} as React.CSSProperties}/>)}</div>
+      <Mascot state={mistakes === 0 ? 'apaixonado' : 'feliz'} size="lg" />
+      <h1>{mistakes === 0 ? 'Lição PERFEITA!' : 'Lição concluída!'}</h1>
+      <div className="lesson-done__stats">
+        <div><Zap size={20}/><b>+{earnedXp} XP</b><small>experiência</small></div>
+        <div><Sparkles size={20}/><b>{total - mistakes}/{total}</b><small>acertos</small></div>
+      </div>
+      {mistakes > 0 && <p className="lesson-done__tip">Revise os exercícios que errou — os conceitos vão aparecer de novo nas próximas lições.</p>}
+      <button className="primary-button primary-button--full" onClick={() => onComplete(earnedXp, mistakes === 0)}>Continuar →</button>
+    </section>}
   </main>
+}
+
+// ---- destaque de sintaxe leve (sem dependência externa) ----
+const KEYWORDS = /\b(const|let|var|function|return|if|else|for|while|class|import|export|from|new|await|async|try|catch|throw|def|print|lambda|elif|None|True|False|public|private|static|void|int|string|bool|interface|type|extends|implements|switch|case|break|continue|in|of|not|and|or|is|SELECT|FROM|WHERE|INSERT|INTO|VALUES|UPDATE|SET|DELETE|JOIN|GROUP BY|ORDER BY|CREATE|TABLE)\b/g
+function highlight(code: string): string {
+  const esc = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return esc
+    .replace(/("[^"\n]*"|'[^'\n]*'|`[^`]*`)/g, '\u0001str\u0002$1\u0001/\u0002')
+    .replace(/(\/\/[^\n]*|#[^\n]*)/g, '\u0001com\u0002$1\u0001/\u0002')
+    .replace(KEYWORDS, '\u0001kw\u0002$1\u0001/\u0002')
+    .replace(/\b(\d+(?:\.\d+)?)\b/g, '\u0001num\u0002$1\u0001/\u0002')
+    .replace(/\u0001(str|com|kw|num)\u0002/g, '<span class="tok-$1">')
+    .replace(/\u0001\/\u0002/g, '</span>')
+}
+export function Code({ text, lang }: { text: string; lang?: string }) {
+  return <pre className="code-block">{lang && <span className="code-lang">{lang}</span>}<code dangerouslySetInnerHTML={{ __html: highlight(text) }} /></pre>
 }
 
 // Renderizador de markdown minimalista (títulos, negrito, código, tabelas simples)
 function MD({ text }: { text: string }) {
   const blocks = text.split(/```/)
   return <div className="md">{blocks.map((b, i) => i % 2 === 1
-    ? <pre key={i}><code>{b.replace(/^\w+\n/, '')}</code></pre>
+    ? <Code key={i} lang={b.match(/^(\w+)\n/)?.[1]} text={b.replace(/^\w*\n/, '')} />
     : b.split('\n').map((line, j) => {
         if (line.startsWith('### ')) return <h3 key={`${i}-${j}`}>{line.slice(4)}</h3>
         if (line.startsWith('| ')) return <p key={`${i}-${j}`} className="md-row">{line.replace(/\|/g, ' · ')}</p>
